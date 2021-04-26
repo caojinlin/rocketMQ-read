@@ -100,21 +100,25 @@ public class NamesrvStartup {
                 in.close();
             }
         }
-
+        // 如果启动时带了 '-p' 选项，打印 nameServer 所有的配置信息
         if (commandLine.hasOption('p')) {
             InternalLogger console = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_CONSOLE_NAME);
+            // 在控制台打印配置信息
             MixAll.printObjectProperties(console, namesrvConfig);
             MixAll.printObjectProperties(console, nettyServerConfig);
             System.exit(0);
         }
 
+        // 在 mqnamersrv 命令行中，带上的配置选项都读取出来，然后覆盖到 namesrvconfig 中
         MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), namesrvConfig);
 
+        // 如果 ROCKETMQ_HOME 是空的，进行报错，提示需要配置 ROCKETMQ_HOME 环境变量
         if (null == namesrvConfig.getRocketmqHome()) {
             System.out.printf("Please set the %s variable in your environment to match the location of the RocketMQ installation%n", MixAll.ROCKETMQ_HOME_ENV);
             System.exit(-2);
         }
 
+        // 日志配置相关
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(lc);
@@ -122,7 +126,7 @@ public class NamesrvStartup {
         configurator.doConfigure(namesrvConfig.getRocketmqHome() + "/conf/logback_namesrv.xml");
 
         log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
-
+        // 在日志中打印所有的配置信息
         MixAll.printObjectProperties(log, namesrvConfig);
         MixAll.printObjectProperties(log, nettyServerConfig);
 
@@ -146,12 +150,9 @@ public class NamesrvStartup {
             System.exit(-3);
         }
 
-        Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                controller.shutdown();
-                return null;
-            }
+        Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, (Callable<Void>) () -> {
+            controller.shutdown();
+            return null;
         }));
 
         controller.start();

@@ -75,15 +75,20 @@ public class NamesrvController {
 
     public boolean initialize() {
 
+        // 加载 KV 配置
         this.kvConfigManager.load();
 
+        // 初始化 netty 服务器
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+        // 初始化 netty 服务器的工作线程
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // 把工作线程给 Netty 服务器
         this.registerProcessor();
 
+        // 启动一个后台线程，执行定时任务，扫描哪些 Broker 没发送心跳
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -92,6 +97,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        // 启动一个定时任务打印 KV 配置信息
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override

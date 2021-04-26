@@ -225,6 +225,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         }
 
         try {
+            // 启动 Netty 服务器，绑定和监听一个端口号
             ChannelFuture sync = this.serverBootstrap.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
             this.port = addr.getPort();
